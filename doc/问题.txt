@@ -1,0 +1,12 @@
+# 用户
+	# userid
+	# username
+	# password
+	# is_delete
+	# description
+	# create_time
+	
+# 
+
+
+

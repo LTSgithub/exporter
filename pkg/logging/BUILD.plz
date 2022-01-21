@@ -1,0 +1,13 @@
+go_library(
+    name = "logging",
+    srcs = glob(["*.go"], exclude = ["*_test.go"]),
+    visibility = ["PUBLIC"],
+    deps = [
+        "//third_party/go:github.com__go-logr__logr",
+        "//third_party/go:github.com__go-logr__zapr",
+        "//third_party/go:github.com__mattn__go-isatty",
+        "//third_party/go:github.com__valyala__fasthttp",
+        "//third_party/go:go.uber.org__zap",
+        "//third_party/go:go.uber.org__zap__zapcore",
+    ],
+)

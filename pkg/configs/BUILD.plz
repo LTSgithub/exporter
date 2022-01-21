@@ -1,0 +1,15 @@
+go_library(
+    name = "configs",
+    srcs = glob(["*.go"], exclude = ["*_test.go"]),
+    visibility = ["PUBLIC"],
+    deps = ["//third_party/go:gopkg.in__ini.v1"],
+)
+
+go_test(
+    name = "test",
+    srcs = glob(["*_test.go"]),
+    deps = [
+        ":configs",
+        "//third_party/go:github.com__stretchr__testify__assert",
+    ],
+)

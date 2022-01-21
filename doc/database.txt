@@ -1,0 +1,11 @@
+# 用户表
+	# userid
+	# username
+	# password
+	# description
+	# create_time
+	
+# 
+
+
+
