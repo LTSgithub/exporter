@@ -3,48 +3,57 @@ package engin
 import (
 	"context"
 	"database/sql"
+	"time"
+
 	"github.com/go-logr/logr"
-	"github.com/lits01/xiaozhan/domain/common"
-	"github.com/lits01/xiaozhan/domain/engin/cache"
-	"github.com/lits01/xiaozhan/domain/engin/sina"
-	_type "github.com/lits01/xiaozhan/domain/engin/type"
 	"github.com/lits01/xiaozhan/pkg/configs"
+	"github.com/lits01/xiaozhan/pkg/engin/cache"
+	"github.com/lits01/xiaozhan/pkg/engin/webdata"
 	time2 "github.com/lits01/xiaozhan/pkg/time"
 	"github.com/lits01/xiaozhan/repositories/generated"
+	typing "github.com/lits01/xiaozhan/type"
 	"github.com/pkg/errors"
-	"time"
 )
 
 type Engin struct {
-	config configs.Configuration
-	log    *logr.Logger
-	query  *generated.Queries
-	sina   *sina.Sina
-	cache  *cache.Cache
+	config  configs.Configuration
+	log     *logr.Logger
+	query   *generated.Queries
+	webdata *webdata.Webdata
+	cache   *cache.Cache
 }
 
 func NewEngin(conf configs.Configuration, log *logr.Logger, db *sql.DB) *Engin {
 	return &Engin{
-		config: conf,
-		log:    log,
-		query:  generated.New(db),
-		sina:   sina.NewSina(conf, log),
-		cache: cache.NewCache(),
+		config:  conf,
+		log:     log,
+		query:   generated.New(db),
+		webdata: webdata.NewWebdata(conf, log),
+		cache:   cache.NewCache(),
 	}
 }
 
 func (m *Engin) Run() error {
-	//m.syncStockList()
-	m.syncStockPrice()
+	go m.syncStockList()
+
+	go m.syncRealtimeInfo()
+
+	go m.syncRealtimeInfo()
+
 	return nil
 }
 
-func (m *Engin) syncStockPrice() error {
+func (m *Engin) syncHistoryInfo() error {
+
+	return nil
+}
+
+func (m *Engin) syncRealtimeInfo() error {
 	t := time.Now()
 
 	for {
 		if err := func() error {
-			ctx, cancal := common.NewDefaultContext()
+			ctx, cancal := NewDefaultContext()
 			defer cancal()
 			notUpdateStockList, err := m.query.GetNotUpdateStockList(ctx, time2.GetDateTimeString(t))
 			if err != nil {
@@ -56,13 +65,13 @@ func (m *Engin) syncStockPrice() error {
 				return nil
 			}
 
-			stockInfo, err := m.sina.GetStocksPrice(ctx, notUpdateStockList)
+			stockInfo, err := m.webdata.GetStocksPrice(ctx, notUpdateStockList)
 			if err != nil {
 				return errors.Wrap(err, "获取新浪数据失败")
 			}
 
 			for _, v := range stockInfo {
-				if err := m.updateStockInfo(v.Code,"",v.Sprice,t);err != nil {
+				if err := m.updateStockInfo(v.Code, "", v.Sprice, t); err != nil {
 					m.log.Error(err, "")
 				}
 			}
@@ -70,7 +79,7 @@ func (m *Engin) syncStockPrice() error {
 			return nil
 		}(); err != nil {
 			m.log.Error(err, "更新数据库失败")
-		}else {
+		} else {
 			m.log.Info("更新完99条数据")
 		}
 
@@ -80,7 +89,7 @@ func (m *Engin) syncStockPrice() error {
 	return nil
 }
 
-func (m * Engin)updateStockInfo(code string,name string,price float64,t time.Time) error  {
+func (m *Engin) updateStockInfo(code string, name string, price float64, t time.Time) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 	arg := generated.UpdateStockStatusParams{
@@ -94,19 +103,19 @@ func (m * Engin)updateStockInfo(code string,name string,price float64,t time.Tim
 		return errors.Wrap(err, "更新数据库失败")
 	}
 
-	data := _type.TV{
-		Time :t.Unix(),
-		Value :price,
+	data := typing.TV{
+		Time:  t.Unix(),
+		Price: price,
 	}
-	m.cache.SetRealTime(code,&data)
+	m.cache.SetRealTime(code, &data)
 
 	return nil
 }
 
 func (m *Engin) syncStockList() error {
-	codeList := m.sina.GetStockList()
+	codeList := m.webdata.GetStockList()
 
-	ctx, cancel := context.WithTimeout(context.Background(), 300*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 	dbStockList, err := m.query.GetStockStatusList(ctx)
 	if err != nil {

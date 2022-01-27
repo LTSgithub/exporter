@@ -1,62 +1,58 @@
-package sina
+package webdata
 
 import (
 	"context"
 	"fmt"
-	"github.com/go-logr/logr"
-	"github.com/lits01/xiaozhan/domain/common"
-	_type "github.com/lits01/xiaozhan/domain/engin/type"
-	"github.com/lits01/xiaozhan/pkg/configs"
-	"github.com/lits01/xiaozhan/pkg/net"
-	"github.com/lits01/xiaozhan/pkg/util"
-	"github.com/lits01/xiaozhan/repositories/generated"
-	"github.com/pkg/errors"
 	"net/http"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/go-logr/logr"
+	"github.com/lits01/xiaozhan/domain/common"
+	"github.com/lits01/xiaozhan/pkg/configs"
+	_type "github.com/lits01/xiaozhan/pkg/engin/type"
+	"github.com/lits01/xiaozhan/pkg/net"
+	"github.com/lits01/xiaozhan/pkg/util"
+	"github.com/lits01/xiaozhan/repositories/generated"
+	"github.com/pkg/errors"
 )
 
-type Sina struct {
+type Webdata struct {
 	config configs.Configuration
 	log    *logr.Logger
-	token chan bool
+	token  chan bool
 }
 
-func NewSina(conf configs.Configuration, log *logr.Logger) *Sina {
-	sina := &Sina{
+func NewWebdata(conf configs.Configuration, log *logr.Logger) *Webdata {
+	sina := &Webdata{
 		config: conf,
 		log:    log,
-		token: make(chan bool),
+		token:  make(chan bool),
 	}
 	sina.run()
 
 	return sina
 }
 
-func (m * Sina)run()  {
+func (m *Webdata) run() {
 	for {
 		m.token <- true
 		time.Sleep(1 * time.Second)
 	}
 }
 
-func (m * Sina)getToken()  {
-	<- m.token
+func (m *Webdata) getToken() {
+	<-m.token
 }
 
-func (m * Sina)GetDayPriceList(code string )[]*_type.TV{
+func (m *Webdata) GetDayPriceList(code string) []*_type.TV {
 	var resp []*_type.TV
-
-
-
-
-
 
 	return resp
 }
 
-func (m *Sina) GetStockList() []string {
+func (m *Webdata) GetStockList() []string {
 	var resp []string
 	flag := `href="/q//go.php/vIR_StockSearch/key/`
 	for i := 1; i <= 82; i++ {
@@ -81,7 +77,7 @@ func (m *Sina) GetStockList() []string {
 						m.log.Error(err, "解析的sina的stock code错误", "code", c)
 						continue
 					}
-					resp = append(resp,c)
+					resp = append(resp, c)
 				}
 			}
 		}()
@@ -90,7 +86,7 @@ func (m *Sina) GetStockList() []string {
 	return resp
 }
 
-func (m *Sina) GetStocksPrice(ctx context.Context, stocks []generated.StockStatus) (map[string]*generated.StockStatus, error) {
+func (m *Webdata) GetStocksPrice(ctx context.Context, stocks []generated.StockStatus) (map[string]*generated.StockStatus, error) {
 	resp := map[string]*generated.StockStatus{}
 
 	var params string
