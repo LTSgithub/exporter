@@ -14,7 +14,6 @@ import (
 	_type "github.com/lits01/xiaozhan/pkg/engin/type"
 	"github.com/lits01/xiaozhan/pkg/net"
 	"github.com/lits01/xiaozhan/pkg/util"
-	"github.com/lits01/xiaozhan/repositories/generated"
 	"github.com/pkg/errors"
 )
 
@@ -86,17 +85,17 @@ func (m *Webdata) GetStockList() []string {
 	return resp
 }
 
-func (m *Webdata) GetStocksPrice(ctx context.Context, stocks []generated.StockStatus) (map[string]*generated.StockStatus, error) {
-	resp := map[string]*generated.StockStatus{}
+func (m *Webdata) GetStocksPrice(ctx context.Context, stockCodes []string) (map[string]*Stock, error) {
+	resp := map[string]*Stock{}
 
 	var params string
-	for _, v := range stocks {
-		vPre := v.Code[:2]
+	for _, v := range stockCodes {
+		vPre := v[:2]
 		switch vPre {
 		case "60":
-			params += "sh" + v.Code + ","
+			params += "sh" + v + ","
 		case "30", "00":
-			params += "sz" + v.Code + ","
+			params += "sz" + v + ","
 		default:
 			m.log.Info("warning", "stock_code", v)
 		}
@@ -119,8 +118,8 @@ func (m *Webdata) GetStocksPrice(ctx context.Context, stocks []generated.StockSt
 		CodeName := strings.Split(strings.Split(v, ",")[0], "=")
 		code := CodeName[0][len(CodeName[0])-6:]
 		name := strings.Split(CodeName[1], "\"")[1]
-		info := &generated.StockStatus{Code: code, Name: name}
-		info.Sprice, err = strconv.ParseFloat(strings.Split(v, ",")[3], 64)
+		info := &Stock{Code: code, Name: name}
+		info.Price, err = strconv.ParseFloat(strings.Split(v, ",")[3], 64)
 		if err != nil {
 			continue
 		}

@@ -13,13 +13,12 @@ func NewAlertConfig() *AlertConfig {
 	return &AlertConfig{}
 }
 
-func (m * AlertConfig)(ctx context.Context, alertConfig * generated.  ) error {
-
-
-	m.query.
+func (m * AlertConfig)(ctx context.Context, alertConfig * generated.AlertConfig  ) error {
 
 
 
+
+	return nil
 }
 
 func (m *AlertConfig) List() (map[string]*AlertDetail, error) {

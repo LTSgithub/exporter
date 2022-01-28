@@ -11,7 +11,6 @@ import (
 	"github.com/lits01/xiaozhan/pkg/engin/webdata"
 	time2 "github.com/lits01/xiaozhan/pkg/time"
 	"github.com/lits01/xiaozhan/repositories/generated"
-	typing "github.com/lits01/xiaozhan/type"
 	"github.com/pkg/errors"
 )
 
@@ -38,12 +37,33 @@ func (m *Engin) Run() error {
 
 	go m.syncRealtimeInfo()
 
-	go m.syncRealtimeInfo()
+	go m.syncMinuteInfo()
+
+	go m.syncDaysInfo()
+
+	go m.syncWeeksInfo()
+
+	go m.syncMonthsInfo()
 
 	return nil
 }
 
-func (m *Engin) syncHistoryInfo() error {
+func (m *Engin) syncMinuteInfo() error {
+
+	return nil
+}
+
+func (m *Engin) syncDaysInfo() error {
+
+	return nil
+}
+
+func (m *Engin) syncWeeksInfo() error {
+
+	return nil
+}
+
+func (m *Engin) syncMonthsInfo() error {
 
 	return nil
 }
@@ -55,7 +75,7 @@ func (m *Engin) syncRealtimeInfo() error {
 		if err := func() error {
 			ctx, cancal := NewDefaultContext()
 			defer cancal()
-			notUpdateStockList, err := m.query.GetNotUpdateStockList(ctx, time2.GetDateTimeString(t))
+			notUpdateStockList, err := m.query.GetNotUpdateStockCodeList(ctx, time2.GetDateTimeString(t))
 			if err != nil {
 				return errors.Wrap(err, "查询数据失败")
 			}
@@ -71,9 +91,7 @@ func (m *Engin) syncRealtimeInfo() error {
 			}
 
 			for _, v := range stockInfo {
-				if err := m.updateStockInfo(v.Code, "", v.Sprice, t); err != nil {
-					m.log.Error(err, "")
-				}
+				m.cache.SetRealTime(v.Code, v.Price)
 			}
 
 			return nil
@@ -89,39 +107,16 @@ func (m *Engin) syncRealtimeInfo() error {
 	return nil
 }
 
-func (m *Engin) updateStockInfo(code string, name string, price float64, t time.Time) error {
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-	defer cancel()
-	arg := generated.UpdateStockStatusParams{
-		Sprice:     price,
-		Name:       name,
-		UpdateTime: time2.GetDateTimeString(t),
-		Code:       code,
-	}
-
-	if err := m.query.UpdateStockStatus(ctx, arg); err != nil {
-		return errors.Wrap(err, "更新数据库失败")
-	}
-
-	data := typing.TV{
-		Time:  t.Unix(),
-		Price: price,
-	}
-	m.cache.SetRealTime(code, &data)
-
-	return nil
-}
-
 func (m *Engin) syncStockList() error {
 	codeList := m.webdata.GetStockList()
 
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
-	dbStockList, err := m.query.GetStockStatusList(ctx)
+	dbStockList, err := m.query.GetStockList(ctx)
 	if err != nil {
 		return errors.Wrap(err, "查询数据失败")
 	}
-	dbStockMap := map[string]*generated.StockStatus{}
+	dbStockMap := map[string]*generated.Stock{}
 	for _, stock := range dbStockList {
 		stock := stock
 		dbStockMap[stock.Code] = &stock
@@ -133,11 +128,11 @@ func (m *Engin) syncStockList() error {
 			continue
 		}
 
-		arg := generated.InsertStockStatusParams{
+		arg := generated.CreateStockParams{
 			Code:       code,
 			CreateTime: time2.GetDateTimeString(t),
 		}
-		if err := m.query.InsertStockStatus(ctx, arg); err != nil {
+		if err := m.query.CreateStock(ctx, arg); err != nil {
 			return nil
 		}
 	}

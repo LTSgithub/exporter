@@ -22,29 +22,29 @@ func New(db DBTX) *Queries {
 func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	q := Queries{db: db}
 	var err error
+	if q.createStockStmt, err = db.PrepareContext(ctx, createStock); err != nil {
+		return nil, fmt.Errorf("error preparing query CreateStock: %w", err)
+	}
 	if q.createUserStmt, err = db.PrepareContext(ctx, createUser); err != nil {
 		return nil, fmt.Errorf("error preparing query CreateUser: %w", err)
+	}
+	if q.getNotUpdateStockCodeListStmt, err = db.PrepareContext(ctx, getNotUpdateStockCodeList); err != nil {
+		return nil, fmt.Errorf("error preparing query GetNotUpdateStockCodeList: %w", err)
 	}
 	if q.getNotUpdateStockListStmt, err = db.PrepareContext(ctx, getNotUpdateStockList); err != nil {
 		return nil, fmt.Errorf("error preparing query GetNotUpdateStockList: %w", err)
 	}
-	if q.getStockStatusCountStmt, err = db.PrepareContext(ctx, getStockStatusCount); err != nil {
-		return nil, fmt.Errorf("error preparing query GetStockStatusCount: %w", err)
+	if q.getStockCountStmt, err = db.PrepareContext(ctx, getStockCount); err != nil {
+		return nil, fmt.Errorf("error preparing query GetStockCount: %w", err)
 	}
-	if q.getStockStatusListStmt, err = db.PrepareContext(ctx, getStockStatusList); err != nil {
-		return nil, fmt.Errorf("error preparing query GetStockStatusList: %w", err)
+	if q.getStockListStmt, err = db.PrepareContext(ctx, getStockList); err != nil {
+		return nil, fmt.Errorf("error preparing query GetStockList: %w", err)
 	}
 	if q.getUserByIdStmt, err = db.PrepareContext(ctx, getUserById); err != nil {
 		return nil, fmt.Errorf("error preparing query GetUserById: %w", err)
 	}
 	if q.getUserByNameStmt, err = db.PrepareContext(ctx, getUserByName); err != nil {
 		return nil, fmt.Errorf("error preparing query GetUserByName: %w", err)
-	}
-	if q.insertStockStatusStmt, err = db.PrepareContext(ctx, insertStockStatus); err != nil {
-		return nil, fmt.Errorf("error preparing query InsertStockStatus: %w", err)
-	}
-	if q.updateStockStatusStmt, err = db.PrepareContext(ctx, updateStockStatus); err != nil {
-		return nil, fmt.Errorf("error preparing query UpdateStockStatus: %w", err)
 	}
 	if q.updateUserStmt, err = db.PrepareContext(ctx, updateUser); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateUser: %w", err)
@@ -54,9 +54,19 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 
 func (q *Queries) Close() error {
 	var err error
+	if q.createStockStmt != nil {
+		if cerr := q.createStockStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing createStockStmt: %w", cerr)
+		}
+	}
 	if q.createUserStmt != nil {
 		if cerr := q.createUserStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing createUserStmt: %w", cerr)
+		}
+	}
+	if q.getNotUpdateStockCodeListStmt != nil {
+		if cerr := q.getNotUpdateStockCodeListStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getNotUpdateStockCodeListStmt: %w", cerr)
 		}
 	}
 	if q.getNotUpdateStockListStmt != nil {
@@ -64,14 +74,14 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing getNotUpdateStockListStmt: %w", cerr)
 		}
 	}
-	if q.getStockStatusCountStmt != nil {
-		if cerr := q.getStockStatusCountStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing getStockStatusCountStmt: %w", cerr)
+	if q.getStockCountStmt != nil {
+		if cerr := q.getStockCountStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getStockCountStmt: %w", cerr)
 		}
 	}
-	if q.getStockStatusListStmt != nil {
-		if cerr := q.getStockStatusListStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing getStockStatusListStmt: %w", cerr)
+	if q.getStockListStmt != nil {
+		if cerr := q.getStockListStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getStockListStmt: %w", cerr)
 		}
 	}
 	if q.getUserByIdStmt != nil {
@@ -82,16 +92,6 @@ func (q *Queries) Close() error {
 	if q.getUserByNameStmt != nil {
 		if cerr := q.getUserByNameStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing getUserByNameStmt: %w", cerr)
-		}
-	}
-	if q.insertStockStatusStmt != nil {
-		if cerr := q.insertStockStatusStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing insertStockStatusStmt: %w", cerr)
-		}
-	}
-	if q.updateStockStatusStmt != nil {
-		if cerr := q.updateStockStatusStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing updateStockStatusStmt: %w", cerr)
 		}
 	}
 	if q.updateUserStmt != nil {
@@ -136,31 +136,31 @@ func (q *Queries) queryRow(ctx context.Context, stmt *sql.Stmt, query string, ar
 }
 
 type Queries struct {
-	db                        DBTX
-	tx                        *sql.Tx
-	createUserStmt            *sql.Stmt
-	getNotUpdateStockListStmt *sql.Stmt
-	getStockStatusCountStmt   *sql.Stmt
-	getStockStatusListStmt    *sql.Stmt
-	getUserByIdStmt           *sql.Stmt
-	getUserByNameStmt         *sql.Stmt
-	insertStockStatusStmt     *sql.Stmt
-	updateStockStatusStmt     *sql.Stmt
-	updateUserStmt            *sql.Stmt
+	db                            DBTX
+	tx                            *sql.Tx
+	createStockStmt               *sql.Stmt
+	createUserStmt                *sql.Stmt
+	getNotUpdateStockCodeListStmt *sql.Stmt
+	getNotUpdateStockListStmt     *sql.Stmt
+	getStockCountStmt             *sql.Stmt
+	getStockListStmt              *sql.Stmt
+	getUserByIdStmt               *sql.Stmt
+	getUserByNameStmt             *sql.Stmt
+	updateUserStmt                *sql.Stmt
 }
 
 func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 	return &Queries{
-		db:                        tx,
-		tx:                        tx,
-		createUserStmt:            q.createUserStmt,
-		getNotUpdateStockListStmt: q.getNotUpdateStockListStmt,
-		getStockStatusCountStmt:   q.getStockStatusCountStmt,
-		getStockStatusListStmt:    q.getStockStatusListStmt,
-		getUserByIdStmt:           q.getUserByIdStmt,
-		getUserByNameStmt:         q.getUserByNameStmt,
-		insertStockStatusStmt:     q.insertStockStatusStmt,
-		updateStockStatusStmt:     q.updateStockStatusStmt,
-		updateUserStmt:            q.updateUserStmt,
+		db:                            tx,
+		tx:                            tx,
+		createStockStmt:               q.createStockStmt,
+		createUserStmt:                q.createUserStmt,
+		getNotUpdateStockCodeListStmt: q.getNotUpdateStockCodeListStmt,
+		getNotUpdateStockListStmt:     q.getNotUpdateStockListStmt,
+		getStockCountStmt:             q.getStockCountStmt,
+		getStockListStmt:              q.getStockListStmt,
+		getUserByIdStmt:               q.getUserByIdStmt,
+		getUserByNameStmt:             q.getUserByNameStmt,
+		updateUserStmt:                q.updateUserStmt,
 	}
 }

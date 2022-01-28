@@ -7,14 +7,14 @@ import (
 )
 
 type Querier interface {
+	CreateStock(ctx context.Context, arg CreateStockParams) error
 	CreateUser(ctx context.Context, arg CreateUserParams) error
-	GetNotUpdateStockList(ctx context.Context, updateTime string) ([]StockStatus, error)
-	GetStockStatusCount(ctx context.Context) (int64, error)
-	GetStockStatusList(ctx context.Context) ([]StockStatus, error)
+	GetNotUpdateStockCodeList(ctx context.Context, updateTime string) ([]string, error)
+	GetNotUpdateStockList(ctx context.Context, updateTime string) ([]Stock, error)
+	GetStockCount(ctx context.Context) (int64, error)
+	GetStockList(ctx context.Context) ([]Stock, error)
 	GetUserById(ctx context.Context, id int32) (User, error)
 	GetUserByName(ctx context.Context, username string) (User, error)
-	InsertStockStatus(ctx context.Context, arg InsertStockStatusParams) error
-	UpdateStockStatus(ctx context.Context, arg UpdateStockStatusParams) error
 	UpdateUser(ctx context.Context, arg UpdateUserParams) error
 }
 

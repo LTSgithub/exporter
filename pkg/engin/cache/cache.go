@@ -2,6 +2,7 @@ package cache
 
 import (
 	"sync"
+	"time"
 
 	typing "github.com/lits01/xiaozhan/type"
 	"github.com/pkg/errors"
@@ -32,7 +33,7 @@ func (m *Cache) GetCodeListByTime(Time int64, count int) []string {
 	var resp []string
 
 	if count <= 0 {
-		count = 10
+		count = 1
 	}
 
 	for k, v := range m.status {
@@ -71,9 +72,14 @@ func (m *Cache) GetRealTime(code string) (*typing.TV, error) {
 	return data, nil
 }
 
-func (m *Cache) SetRealTime(code string, data *typing.TV) {
+func (m *Cache) SetRealTime(code string, price float64) {
 	m.lock.Lock()
 	defer m.lock.Unlock()
+
+	data := &typing.TV{
+		Time: time.Now().Unix(),
+		Price: price,
+	}
 
 	m.realTimes[code] = data
 }

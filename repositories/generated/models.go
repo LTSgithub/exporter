@@ -3,21 +3,31 @@
 package generated
 
 import (
+	"database/sql"
 	"time"
 )
+
+type AlertConfig struct {
+	UserID     string         `db:"user_id" json:"userID"`
+	StockCode  string         `db:"stock_code" json:"stockCode"`
+	NotifyType string         `db:"notify_type" json:"notifyType"`
+	Price      interface{}    `db:"price" json:"price"`
+	ID         string         `db:"id" json:"id"`
+	Deadline   sql.NullString `db:"deadline" json:"deadline"`
+	CreateTime int32          `db:"create_time" json:"createTime"`
+}
 
 // app状态表
 type App struct {
 	AppStatus string `db:"app_status" json:"appStatus"`
 }
 
-type StockStatus struct {
-	Code       string  `db:"code" json:"code"`
-	Sprice     float64 `db:"sprice" json:"sprice"`
-	Name       string  `db:"name" json:"name"`
-	Type       string  `db:"type" json:"type"`
-	CreateTime string  `db:"create_time" json:"createTime"`
-	UpdateTime string  `db:"update_time" json:"updateTime"`
+type Stock struct {
+	Code       string `db:"code" json:"code"`
+	Name       string `db:"name" json:"name"`
+	Type       string `db:"type" json:"type"`
+	CreateTime string `db:"create_time" json:"createTime"`
+	UpdateTime string `db:"update_time" json:"updateTime"`
 }
 
 // 用户表
