@@ -3,18 +3,18 @@
 package generated
 
 import (
-	"database/sql"
 	"time"
 )
 
 type AlertConfig struct {
-	UserID     string         `db:"user_id" json:"userID"`
-	StockCode  string         `db:"stock_code" json:"stockCode"`
-	NotifyType string         `db:"notify_type" json:"notifyType"`
-	Price      interface{}    `db:"price" json:"price"`
-	ID         string         `db:"id" json:"id"`
-	Deadline   sql.NullString `db:"deadline" json:"deadline"`
-	CreateTime int32          `db:"create_time" json:"createTime"`
+	UserID     string  `db:"user_id" json:"userID"`
+	StockCode  string  `db:"stock_code" json:"stockCode"`
+	NotifyType string  `db:"notify_type" json:"notifyType"`
+	Price      float64 `db:"price" json:"price"`
+	ID         string  `db:"id" json:"id"`
+	Deadline   int64   `db:"deadline" json:"deadline"`
+	CreateTime int64   `db:"create_time" json:"createTime"`
+	Desc       string  `db:"desc" json:"desc"`
 }
 
 // app状态表

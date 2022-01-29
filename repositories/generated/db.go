@@ -22,11 +22,20 @@ func New(db DBTX) *Queries {
 func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	q := Queries{db: db}
 	var err error
+	if q.createAlertConfigStmt, err = db.PrepareContext(ctx, createAlertConfig); err != nil {
+		return nil, fmt.Errorf("error preparing query CreateAlertConfig: %w", err)
+	}
 	if q.createStockStmt, err = db.PrepareContext(ctx, createStock); err != nil {
 		return nil, fmt.Errorf("error preparing query CreateStock: %w", err)
 	}
 	if q.createUserStmt, err = db.PrepareContext(ctx, createUser); err != nil {
 		return nil, fmt.Errorf("error preparing query CreateUser: %w", err)
+	}
+	if q.deleteAlertConfigStmt, err = db.PrepareContext(ctx, deleteAlertConfig); err != nil {
+		return nil, fmt.Errorf("error preparing query DeleteAlertConfig: %w", err)
+	}
+	if q.getAlertConfigListByUserIdStmt, err = db.PrepareContext(ctx, getAlertConfigListByUserId); err != nil {
+		return nil, fmt.Errorf("error preparing query GetAlertConfigListByUserId: %w", err)
 	}
 	if q.getNotUpdateStockCodeListStmt, err = db.PrepareContext(ctx, getNotUpdateStockCodeList); err != nil {
 		return nil, fmt.Errorf("error preparing query GetNotUpdateStockCodeList: %w", err)
@@ -46,6 +55,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.getUserByNameStmt, err = db.PrepareContext(ctx, getUserByName); err != nil {
 		return nil, fmt.Errorf("error preparing query GetUserByName: %w", err)
 	}
+	if q.updateAlertConfigStmt, err = db.PrepareContext(ctx, updateAlertConfig); err != nil {
+		return nil, fmt.Errorf("error preparing query UpdateAlertConfig: %w", err)
+	}
 	if q.updateUserStmt, err = db.PrepareContext(ctx, updateUser); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateUser: %w", err)
 	}
@@ -54,6 +66,11 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 
 func (q *Queries) Close() error {
 	var err error
+	if q.createAlertConfigStmt != nil {
+		if cerr := q.createAlertConfigStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing createAlertConfigStmt: %w", cerr)
+		}
+	}
 	if q.createStockStmt != nil {
 		if cerr := q.createStockStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing createStockStmt: %w", cerr)
@@ -62,6 +79,16 @@ func (q *Queries) Close() error {
 	if q.createUserStmt != nil {
 		if cerr := q.createUserStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing createUserStmt: %w", cerr)
+		}
+	}
+	if q.deleteAlertConfigStmt != nil {
+		if cerr := q.deleteAlertConfigStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing deleteAlertConfigStmt: %w", cerr)
+		}
+	}
+	if q.getAlertConfigListByUserIdStmt != nil {
+		if cerr := q.getAlertConfigListByUserIdStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getAlertConfigListByUserIdStmt: %w", cerr)
 		}
 	}
 	if q.getNotUpdateStockCodeListStmt != nil {
@@ -92,6 +119,11 @@ func (q *Queries) Close() error {
 	if q.getUserByNameStmt != nil {
 		if cerr := q.getUserByNameStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing getUserByNameStmt: %w", cerr)
+		}
+	}
+	if q.updateAlertConfigStmt != nil {
+		if cerr := q.updateAlertConfigStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing updateAlertConfigStmt: %w", cerr)
 		}
 	}
 	if q.updateUserStmt != nil {
@@ -136,31 +168,39 @@ func (q *Queries) queryRow(ctx context.Context, stmt *sql.Stmt, query string, ar
 }
 
 type Queries struct {
-	db                            DBTX
-	tx                            *sql.Tx
-	createStockStmt               *sql.Stmt
-	createUserStmt                *sql.Stmt
-	getNotUpdateStockCodeListStmt *sql.Stmt
-	getNotUpdateStockListStmt     *sql.Stmt
-	getStockCountStmt             *sql.Stmt
-	getStockListStmt              *sql.Stmt
-	getUserByIdStmt               *sql.Stmt
-	getUserByNameStmt             *sql.Stmt
-	updateUserStmt                *sql.Stmt
+	db                             DBTX
+	tx                             *sql.Tx
+	createAlertConfigStmt          *sql.Stmt
+	createStockStmt                *sql.Stmt
+	createUserStmt                 *sql.Stmt
+	deleteAlertConfigStmt          *sql.Stmt
+	getAlertConfigListByUserIdStmt *sql.Stmt
+	getNotUpdateStockCodeListStmt  *sql.Stmt
+	getNotUpdateStockListStmt      *sql.Stmt
+	getStockCountStmt              *sql.Stmt
+	getStockListStmt               *sql.Stmt
+	getUserByIdStmt                *sql.Stmt
+	getUserByNameStmt              *sql.Stmt
+	updateAlertConfigStmt          *sql.Stmt
+	updateUserStmt                 *sql.Stmt
 }
 
 func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 	return &Queries{
-		db:                            tx,
-		tx:                            tx,
-		createStockStmt:               q.createStockStmt,
-		createUserStmt:                q.createUserStmt,
-		getNotUpdateStockCodeListStmt: q.getNotUpdateStockCodeListStmt,
-		getNotUpdateStockListStmt:     q.getNotUpdateStockListStmt,
-		getStockCountStmt:             q.getStockCountStmt,
-		getStockListStmt:              q.getStockListStmt,
-		getUserByIdStmt:               q.getUserByIdStmt,
-		getUserByNameStmt:             q.getUserByNameStmt,
-		updateUserStmt:                q.updateUserStmt,
+		db:                             tx,
+		tx:                             tx,
+		createAlertConfigStmt:          q.createAlertConfigStmt,
+		createStockStmt:                q.createStockStmt,
+		createUserStmt:                 q.createUserStmt,
+		deleteAlertConfigStmt:          q.deleteAlertConfigStmt,
+		getAlertConfigListByUserIdStmt: q.getAlertConfigListByUserIdStmt,
+		getNotUpdateStockCodeListStmt:  q.getNotUpdateStockCodeListStmt,
+		getNotUpdateStockListStmt:      q.getNotUpdateStockListStmt,
+		getStockCountStmt:              q.getStockCountStmt,
+		getStockListStmt:               q.getStockListStmt,
+		getUserByIdStmt:                q.getUserByIdStmt,
+		getUserByNameStmt:              q.getUserByNameStmt,
+		updateAlertConfigStmt:          q.updateAlertConfigStmt,
+		updateUserStmt:                 q.updateUserStmt,
 	}
 }

@@ -2,42 +2,41 @@ package cache
 
 import (
 	"sync"
-	"time"
 
-	typing "github.com/lits01/xiaozhan/type"
+	"github.com/lits01/xiaozhan/pkg/engin/model"
+
 	"github.com/pkg/errors"
 )
 
 type Cache struct {
-	status    map[string]*Status
-	realTimes map[string]*typing.TV
-	days      map[string][]*typing.TV
-	weeks     map[string][]*typing.TV
-	month     map[string][]*typing.TV
-	lock      sync.RWMutex
+	lock sync.RWMutex
+
+	realTimes map[string]*model.Status
+	days      map[string]*model.Status
+	weeks     map[string]*model.Status
+	months    map[string]*model.Status
 }
 
 func NewCache() *Cache {
 	return &Cache{
-		status:    map[string]*Status{},
-		realTimes: map[string]*typing.TV{},
-		days:      map[string][]*typing.TV{},
-		weeks:     map[string][]*typing.TV{},
-		month:     map[string][]*typing.TV{},
+		realTimes: map[string]*model.Status{},
+		days:      map[string]*model.Status{},
+		weeks:     map[string]*model.Status{},
+		months:    map[string]*model.Status{},
 	}
 }
 
-func (m *Cache) GetCodeListByTime(Time int64, count int) []string {
+func (m *Cache) GetRealTimeCodeListByTime(Time int64, limit int) []string {
 	m.lock.Lock()
 	defer m.lock.Unlock()
 	var resp []string
 
-	if count <= 0 {
-		count = 1
+	if limit <= 0 {
+		limit = 1
 	}
 
-	for k, v := range m.status {
-		if len(resp) >= count {
+	for k, v := range m.realTimes {
+		if len(resp) >= limit {
 			return resp
 		}
 		if v.UpdateTime != Time {
@@ -48,19 +47,7 @@ func (m *Cache) GetCodeListByTime(Time int64, count int) []string {
 	return resp
 }
 
-func (m *Cache) UpdateUpdateTime(codes []string, Time int64) {
-	m.lock.Lock()
-	defer m.lock.Unlock()
-
-	for _, v := range codes {
-		status, ok := m.status[v]
-		if ok {
-			status.UpdateTime = Time
-		}
-	}
-}
-
-func (m *Cache) GetRealTime(code string) (*typing.TV, error) {
+func (m *Cache) GetRealTime(code string) (*model.Status, error) {
 	m.lock.RLock()
 	defer m.lock.RUnlock()
 
@@ -72,13 +59,13 @@ func (m *Cache) GetRealTime(code string) (*typing.TV, error) {
 	return data, nil
 }
 
-func (m *Cache) SetRealTime(code string, price float64) {
+func (m *Cache) SetRealTime(code string, t int64, price float32) {
 	m.lock.Lock()
 	defer m.lock.Unlock()
 
-	data := &typing.TV{
-		Time: time.Now().Unix(),
-		Price: price,
+	data := &model.Status{
+		UpdateTime: t,
+		Price:      price,
 	}
 
 	m.realTimes[code] = data

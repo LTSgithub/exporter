@@ -7,14 +7,18 @@ import (
 )
 
 type Querier interface {
+	CreateAlertConfig(ctx context.Context, arg CreateAlertConfigParams) error
 	CreateStock(ctx context.Context, arg CreateStockParams) error
 	CreateUser(ctx context.Context, arg CreateUserParams) error
+	DeleteAlertConfig(ctx context.Context, id string) error
+	GetAlertConfigListByUserId(ctx context.Context, arg GetAlertConfigListByUserIdParams) ([]AlertConfig, error)
 	GetNotUpdateStockCodeList(ctx context.Context, updateTime string) ([]string, error)
 	GetNotUpdateStockList(ctx context.Context, updateTime string) ([]Stock, error)
 	GetStockCount(ctx context.Context) (int64, error)
 	GetStockList(ctx context.Context) ([]Stock, error)
 	GetUserById(ctx context.Context, id int32) (User, error)
 	GetUserByName(ctx context.Context, username string) (User, error)
+	UpdateAlertConfig(ctx context.Context, arg UpdateAlertConfigParams) error
 	UpdateUser(ctx context.Context, arg UpdateUserParams) error
 }
 

@@ -8,10 +8,11 @@ import (
 	"strings"
 	"time"
 
+	"github.com/lits01/xiaozhan/pkg/engin/model"
+
 	"github.com/go-logr/logr"
 	"github.com/lits01/xiaozhan/domain/common"
 	"github.com/lits01/xiaozhan/pkg/configs"
-	_type "github.com/lits01/xiaozhan/pkg/engin/type"
 	"github.com/lits01/xiaozhan/pkg/net"
 	"github.com/lits01/xiaozhan/pkg/util"
 	"github.com/pkg/errors"
@@ -43,12 +44,6 @@ func (m *Webdata) run() {
 
 func (m *Webdata) getToken() {
 	<-m.token
-}
-
-func (m *Webdata) GetDayPriceList(code string) []*_type.TV {
-	var resp []*_type.TV
-
-	return resp
 }
 
 func (m *Webdata) GetStockList() []string {
@@ -85,8 +80,8 @@ func (m *Webdata) GetStockList() []string {
 	return resp
 }
 
-func (m *Webdata) GetStocksPrice(ctx context.Context, stockCodes []string) (map[string]*Stock, error) {
-	resp := map[string]*Stock{}
+func (m *Webdata) GetStocksPrice(ctx context.Context, stockCodes []string) (map[string]*model.Stock, error) {
+	resp := map[string]*model.Stock{}
 
 	var params string
 	for _, v := range stockCodes {
@@ -118,11 +113,12 @@ func (m *Webdata) GetStocksPrice(ctx context.Context, stockCodes []string) (map[
 		CodeName := strings.Split(strings.Split(v, ",")[0], "=")
 		code := CodeName[0][len(CodeName[0])-6:]
 		name := strings.Split(CodeName[1], "\"")[1]
-		info := &Stock{Code: code, Name: name}
-		info.Price, err = strconv.ParseFloat(strings.Split(v, ",")[3], 64)
+		info := &model.Stock{Code: code, Name: name}
+		price, err := strconv.ParseFloat(strings.Split(v, ",")[3], 64)
 		if err != nil {
 			continue
 		}
+		info.Price = float32(price)
 		resp[info.Code] = info
 	}
 

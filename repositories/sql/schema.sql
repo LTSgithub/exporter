@@ -24,10 +24,11 @@ CREATE TABLE `alert_config` (
     `user_id` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL DEFAULT '',
     `stock_code` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL DEFAULT '',
     `notify_type` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL DEFAULT '',
-    `price` float DEFAULT NULL,
+    `price` double NOT NULL DEFAULT '0',
     `id` varchar(36) NOT NULL DEFAULT '',
-    `deadline` varchar(100) DEFAULT NULL,
-    `create_time` int unsigned NOT NULL DEFAULT '0'
+    `deadline` bigint NOT NULL,
+    `create_time` bigint NOT NULL DEFAULT '0',
+    `desc` varchar(100) NOT NULL DEFAULT ''
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 
